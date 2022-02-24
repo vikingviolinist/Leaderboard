@@ -57,7 +57,6 @@ func (a *app) initialize() {
 }
 
 func (a *app) initializeRoutes() {
-	a.Router.HandleFunc("/player", a.getPlayer).Methods("GET")
 	a.Router.HandleFunc("/wins", a.getPlayerWins).Methods("GET")
 	a.Router.HandleFunc("/losses", a.getPlayerLosses).Methods("GET")
 	a.Router.HandleFunc("/player", a.createPlayer).Methods("POST")
@@ -72,10 +71,6 @@ func main() {
 	a := app{}
 	a.initialize()
 	http.ListenAndServe(":8000", a.Router)
-}
-
-func (a *app) getPlayer(w http.ResponseWriter, r *http.Request) {
-	return
 }
 
 func (a *app) getPlayerWins(w http.ResponseWriter, r *http.Request) {
