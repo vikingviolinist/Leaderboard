@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -13,17 +12,11 @@ import (
 const key = "leaderboard"
 
 func (a *App) createPlayer(w http.ResponseWriter, r *http.Request) {
-	playerToCreate := new(models.Player)
-
-	if resErr := json.NewDecoder(r.Body).Decode(playerToCreate); resErr != nil {
+	var playerToCreate *models.Player
+	var status int32
+	if status, playerToCreate = models.NewPlayerFromBody(r.Body); status > 0 {
 		fmt.Printf("Invalid parameters\n")
-		utils.RespondWithJSON(w, http.StatusBadRequest, nil)
-		return
-	}
-
-	if !utils.IsValidEmail(playerToCreate.Email) {
-		fmt.Printf("Invalid email %s\n", playerToCreate.Email)
-		utils.RespondWithJSON(w, http.StatusBadRequest, nil)
+		utils.RespondWithJSON(w, status, nil)
 		return
 	}
 
@@ -45,23 +38,22 @@ func (a *App) createPlayer(w http.ResponseWriter, r *http.Request) {
 func (a *App) getPlayers(w http.ResponseWriter, r *http.Request) {
 	zRangeWithScores := a.Redis.ZRangeWithScores(key, 0, -1)
 
-	players := []models.Player{}
+	players := []*models.Player{}
 	for _, data := range zRangeWithScores.Val() {
 		member, _ := data.Member.(string)
 
-		player := models.Player{Email: member, Score: data.Score}
+		player := models.NewPlayer(member, data.Score)
 		players = append(players, player)
 	}
 	utils.RespondWithJSON(w, http.StatusOK, players)
 }
 
 func (a *App) removePlayer(w http.ResponseWriter, r *http.Request) {
-	playerToRemove := new(models.Player)
-	json.NewDecoder(r.Body).Decode(playerToRemove)
-
-	if !utils.IsValidEmail(playerToRemove.Email) {
-		fmt.Printf("Invalid email %s\n", playerToRemove.Email)
-		utils.RespondWithJSON(w, http.StatusBadRequest, nil)
+	var status int32
+	var playerToRemove *models.Player
+	if status, playerToRemove = models.NewPlayerFromBody(r.Body); status > 0 {
+		fmt.Printf("Invalid parameters\n")
+		utils.RespondWithJSON(w, status, nil)
 		return
 	}
 

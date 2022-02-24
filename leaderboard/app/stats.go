@@ -14,17 +14,11 @@ type getRankRequest struct {
 }
 
 func (a *App) getPlayerWins(w http.ResponseWriter, r *http.Request) {
-	playerToUpdate := new(models.Player)
-
-	if err := json.NewDecoder(r.Body).Decode(playerToUpdate); err != nil {
+	var status int32
+	var playerToUpdate *models.Player
+	if status, playerToUpdate = models.NewPlayerFromBody(r.Body); status > 0 {
 		fmt.Printf("Invalid parameters\n")
-		utils.RespondWithJSON(w, http.StatusBadRequest, nil)
-		return
-	}
-
-	if !utils.IsValidEmail(playerToUpdate.Email) {
-		fmt.Printf("Invalid email %s\n", playerToUpdate.Email)
-		utils.RespondWithJSON(w, http.StatusBadRequest, nil)
+		utils.RespondWithJSON(w, status, nil)
 		return
 	}
 
@@ -38,28 +32,22 @@ func (a *App) getPlayerWins(w http.ResponseWriter, r *http.Request) {
 
 	zRevRangeWithScores := a.Redis.ZRevRangeWithScores(playerToUpdate.Email+"-wins", 0, -1)
 	fmt.Println(playerToUpdate.Email, zRevRangeWithScores.Val())
-	players := []models.Player{}
+	players := []*models.Player{}
 	for _, data := range zRevRangeWithScores.Val() {
 		member, _ := data.Member.(string)
 
-		player := models.Player{Email: member, Score: data.Score}
+		player := models.NewPlayer(member, data.Score)
 		players = append(players, player)
 	}
 	utils.RespondWithJSON(w, http.StatusOK, players)
 }
 
 func (a *App) getPlayerLosses(w http.ResponseWriter, r *http.Request) {
-	playerToUpdate := new(models.Player)
-
-	if resErr := json.NewDecoder(r.Body).Decode(playerToUpdate); resErr != nil {
+	var status int32
+	var playerToUpdate *models.Player
+	if status, playerToUpdate = models.NewPlayerFromBody(r.Body); status > 0 {
 		fmt.Printf("Invalid parameters\n")
-		utils.RespondWithJSON(w, http.StatusBadRequest, nil)
-		return
-	}
-
-	if !utils.IsValidEmail(playerToUpdate.Email) {
-		fmt.Printf("Invalid email %s\n", playerToUpdate.Email)
-		utils.RespondWithJSON(w, http.StatusBadRequest, nil)
+		utils.RespondWithJSON(w, status, nil)
 		return
 	}
 
@@ -154,11 +142,11 @@ func (a *App) getRank(w http.ResponseWriter, r *http.Request) {
 func (a *App) getTopThree(w http.ResponseWriter, r *http.Request) {
 	zRevRangeWithScores := a.Redis.ZRevRangeWithScores(key, 0, 2)
 
-	players := []models.Player{}
+	players := []*models.Player{}
 	for _, data := range zRevRangeWithScores.Val() {
 		member, _ := data.Member.(string)
 
-		player := models.Player{Email: member, Score: data.Score}
+		player := models.NewPlayer(member, data.Score)
 		players = append(players, player)
 	}
 	utils.RespondWithJSON(w, http.StatusOK, players)

@@ -6,11 +6,11 @@ import (
 	"net/mail"
 )
 
-func RespondWithJSON(w http.ResponseWriter, code int, player interface{}) {
+func RespondWithJSON(w http.ResponseWriter, code int32, player interface{}) {
 	response, _ := json.Marshal(player)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
+	w.WriteHeader(int(code))
 	w.Write(response)
 }
 
