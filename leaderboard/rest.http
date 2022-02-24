@@ -1,0 +1,59 @@
+### CREATE NEW PLAYER
+POST http://localhost:8000/player HTTP/1.1
+content-type: application/json
+
+{
+    "email": "kevin@test.com"
+}
+
+### UPDATE PLAYER
+PATCH http://localhost:8000/score HTTP/1.1
+content-type: application/json
+
+{
+    "winner": "kevin@test.com",
+    "loser": "mike@test.com",
+    "result": 20
+}
+
+### DELETE PLAYER
+DELETE http://localhost:8000/player HTTP/1.1
+content-type: application/json
+
+{
+    "email": "bob@test.com"
+}
+
+### GET PLAYER WINS
+GET http://localhost:8000/wins HTTP/1.1
+content-type: application/json
+
+{
+    "email": "mike@test.com"
+}
+
+### GET PLAYER LOSSES
+GET http://localhost:8000/losses HTTP/1.1
+content-type: application/json
+
+{
+    "email": "mike@test.com"
+}
+
+### GET ALL PLAYERS
+GET http://localhost:8000/players HTTP/1.1
+content-type: application/json
+
+### GET PLAYER RANK
+GET http://localhost:8000/rank HTTP/1.1
+content-type: application/json
+
+{
+    "email": "kevin@test.com"
+    # "email": "bob@test.com"
+
+}
+
+### GET TOP 3 PLAYERS
+GET http://localhost:8000/top HTTP/1.1
+content-type: application/json
