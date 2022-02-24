@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/mail"
+
+	"github.com/kindly-ai/pingpong-leaderboard/utils"
 
 	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
-	"github.com/kindly-ai/pingpong-leaderboard/users"
 )
 
 type app struct {
@@ -74,11 +74,6 @@ func main() {
 	http.ListenAndServe(":8000", a.Router)
 }
 
-func isValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
 func (a *app) getPlayer(w http.ResponseWriter, r *http.Request) {
 	return
 }
@@ -92,7 +87,7 @@ func (a *app) getPlayerWins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidEmail(playerToUpdate.Email) {
+	if !utils.IsValidEmail(playerToUpdate.Email) {
 		fmt.Printf("Invalid email %s\n", playerToUpdate.Email)
 		respondWithJSON(w, http.StatusBadRequest, nil)
 		return
@@ -127,7 +122,7 @@ func (a *app) createPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidEmail(playerToCreate.Email) {
+	if !utils.IsValidEmail(playerToCreate.Email) {
 		fmt.Printf("Invalid email %s\n", playerToCreate.Email)
 		respondWithJSON(w, http.StatusBadRequest, nil)
 		return
@@ -157,7 +152,7 @@ func (a *app) getPlayerLosses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidEmail(playerToUpdate.Email) {
+	if !utils.IsValidEmail(playerToUpdate.Email) {
 		fmt.Printf("Invalid email %s\n", playerToUpdate.Email)
 		respondWithJSON(w, http.StatusBadRequest, nil)
 		return
@@ -192,7 +187,7 @@ func (a *app) updateScore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidEmail(playerToUpdate.Winner) || !isValidEmail(playerToUpdate.Loser) {
+	if !utils.IsValidEmail(playerToUpdate.Winner) || !utils.IsValidEmail(playerToUpdate.Loser) {
 		fmt.Printf("Invalid email(s): %s, %s\n", playerToUpdate.Winner, playerToUpdate.Loser)
 		respondWithJSON(w, http.StatusBadRequest, nil)
 		return
@@ -231,7 +226,7 @@ func (a *app) removePlayer(w http.ResponseWriter, r *http.Request) {
 	playerToRemove := new(player)
 	json.NewDecoder(r.Body).Decode(playerToRemove)
 
-	if !isValidEmail(playerToRemove.Email) {
+	if !utils.IsValidEmail(playerToRemove.Email) {
 		fmt.Printf("Invalid email %s\n", playerToRemove.Email)
 		respondWithJSON(w, http.StatusBadRequest, nil)
 		return
@@ -257,7 +252,7 @@ func (a *app) getRank(w http.ResponseWriter, r *http.Request) {
 	rank := new(getRankRequest)
 	json.NewDecoder(r.Body).Decode(rank)
 
-	if !isValidEmail(rank.Email) {
+	if !utils.IsValidEmail(rank.Email) {
 		fmt.Printf("Invalid email %s\n", rank.Email)
 		respondWithJSON(w, http.StatusBadRequest, nil)
 		return
@@ -291,7 +286,6 @@ func (a *app) getTopThree(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) getPlayers(w http.ResponseWriter, r *http.Request) {
-	users.Hello()
 	zRangeWithScores := a.Redis.ZRangeWithScores(key, 0, -1)
 
 	players := []player{}
