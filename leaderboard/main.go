@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
+	"github.com/kindly-ai/pingpong-leaderboard/users"
 )
 
 type app struct {
@@ -290,6 +291,7 @@ func (a *app) getTopThree(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) getPlayers(w http.ResponseWriter, r *http.Request) {
+	users.Hello()
 	zRangeWithScores := a.Redis.ZRangeWithScores(key, 0, -1)
 
 	players := []player{}
