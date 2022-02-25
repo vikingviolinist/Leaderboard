@@ -10,12 +10,6 @@ type App struct {
 	Redis  *redis.Client
 }
 
-type UpdatePlayerRequest struct {
-	Winner string  `json:"winner"`
-	Loser  string  `json:"loser"`
-	Result float64 `json:"result"`
-}
-
 func (a *App) Initialize() {
 	a.Router = mux.NewRouter()
 	a.Redis = redis.NewClient(&redis.Options{
@@ -32,10 +26,10 @@ func (a *App) Initialize() {
 }
 
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/wins", a.getPlayerWins).Methods("GET")
-	a.Router.HandleFunc("/losses", a.getPlayerLosses).Methods("GET")
 	a.Router.HandleFunc("/player", a.createPlayer).Methods("POST")
 	a.Router.HandleFunc("/score", a.updateScore).Methods("PATCH")
+	a.Router.HandleFunc("/wins", a.getPlayerWins).Methods("GET")
+	a.Router.HandleFunc("/losses", a.getPlayerLosses).Methods("GET")
 	a.Router.HandleFunc("/player", a.removePlayer).Methods("DELETE")
 	a.Router.HandleFunc("/players", a.getPlayers).Methods("GET")
 	a.Router.HandleFunc("/rank", a.getRank).Methods("GET")

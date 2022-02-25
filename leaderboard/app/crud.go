@@ -12,33 +12,33 @@ import (
 const key = "leaderboard"
 
 func (a *App) createPlayer(w http.ResponseWriter, r *http.Request) {
-	var playerToCreate *models.Player
+	var player models.Player
 	var status int32
-	if status, playerToCreate = models.NewPlayerFromBody(r.Body); status > 0 {
-		fmt.Printf("Invalid parameters\n")
+
+	if status, player = models.NewPlayerFromBody(r.Body); status > 0 {
 		utils.RespondWithJSON(w, status, nil)
 		return
 	}
 
-	zScore := a.Redis.ZScore(key, playerToCreate.Email)
-
-	if _, scoreErr := zScore.Result(); scoreErr == nil {
-		fmt.Printf("Player %s already exists\n", playerToCreate.Email)
+	if models.RedisKeyExists(a.Redis, key, player.Email) {
 		utils.RespondWithJSON(w, http.StatusOK, nil)
 		return
 	}
 
-	a.Redis.ZAddNX(key, redis.Z{Member: playerToCreate.Email})
+	if err := models.RedisKeyCreate(a.Redis, key, redis.Z{Member: player.Email}); err != nil {
+		utils.RespondWithJSON(w, http.StatusOK, player)
+		return
+	}
 
-	fmt.Printf("Created player %s\n", playerToCreate.Email)
+	fmt.Printf("Created player %s\n", player.Email)
 
-	utils.RespondWithJSON(w, http.StatusCreated, playerToCreate)
+	utils.RespondWithJSON(w, http.StatusCreated, player)
 }
 
 func (a *App) getPlayers(w http.ResponseWriter, r *http.Request) {
 	zRangeWithScores := a.Redis.ZRangeWithScores(key, 0, -1)
 
-	players := []*models.Player{}
+	players := []models.Player{}
 	for _, data := range zRangeWithScores.Val() {
 		member, _ := data.Member.(string)
 
@@ -50,25 +50,22 @@ func (a *App) getPlayers(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) removePlayer(w http.ResponseWriter, r *http.Request) {
 	var status int32
-	var playerToRemove *models.Player
-	if status, playerToRemove = models.NewPlayerFromBody(r.Body); status > 0 {
-		fmt.Printf("Invalid parameters\n")
+	var player models.Player
+
+	if status, player = models.NewPlayerFromBody(r.Body); status > 0 {
 		utils.RespondWithJSON(w, status, nil)
 		return
 	}
 
-	zScore := a.Redis.ZScore(key, playerToRemove.Email)
-
-	if _, err := zScore.Result(); err != nil {
-		fmt.Printf("User %s doesn't exist\n", playerToRemove.Email)
-		utils.RespondWithJSON(w, http.StatusNotFound, nil)
+	if !models.RedisKeyExists(a.Redis, key, player.Email) {
+		utils.RespondWithJSON(w, http.StatusOK, nil)
 		return
 	}
 
-	a.Redis.ZRem(key, playerToRemove.Email)
-	a.Redis.Del(playerToRemove.Email + "-wins")
-	a.Redis.Del(playerToRemove.Email + "-losses")
+	a.Redis.ZRem(key, player.Email)
+	a.Redis.Del(player.Email + "-wins")
+	a.Redis.Del(player.Email + "-losses")
 
-	fmt.Printf("Removed player %s\n", playerToRemove.Email)
-	utils.RespondWithJSON(w, http.StatusNoContent, playerToRemove)
+	fmt.Printf("Removed player %s\n", player.Email)
+	utils.RespondWithJSON(w, http.StatusNoContent, player)
 }

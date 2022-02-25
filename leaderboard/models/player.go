@@ -18,23 +18,23 @@ func (p *Player) IsValid() bool {
 	return utils.IsValidEmail(p.Email)
 }
 
-func NewPlayer(email string, score float64) *Player {
-	return &Player{
+func NewPlayer(email string, score float64) Player {
+	return Player{
 		Email: email,
 		Score: score,
 	}
 }
 
-func NewPlayerFromBody(body io.Reader) (int32, *Player) {
+func NewPlayerFromBody(body io.Reader) (int32, Player) {
 	playerToCreate := NewPlayer("", 0.0)
-	if resErr := json.NewDecoder(body).Decode(playerToCreate); resErr != nil {
+	if resErr := json.NewDecoder(body).Decode(&playerToCreate); resErr != nil {
 		fmt.Printf("Invalid parameters\n")
-		return http.StatusBadRequest, &Player{}
+		return http.StatusBadRequest, Player{}
 	}
 
 	if !playerToCreate.IsValid() {
-		fmt.Printf("Invalid parameters\n")
-		return http.StatusBadRequest, &Player{}
+		fmt.Printf("Invalid email\n")
+		return http.StatusBadRequest, Player{}
 	}
 
 	return 0, playerToCreate

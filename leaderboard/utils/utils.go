@@ -18,3 +18,7 @@ func IsValidEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
+
+func IsValidResult(result float64) bool {
+	return result > 0
+}
